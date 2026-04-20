@@ -1,48 +1,42 @@
-# Pipeline de Ingesta Automatizada - Actividad 2.1
+# Pipeline de Ingesta de Datos – Ventas STK
 
-Script automatizado en Python para la ingesta de datos. El proceso mueve archivos desde una zona de origen a una zona historizada (raw), aplicando marcas de tiempo para evitar la pérdida de datos.
+Proyecto de automatización para la primera etapa de un pipeline de datos:
+ingesta incremental desde un archivo CSV de ventas.
 
-## ¿Qué hace el script?
-El script `ingesta.py` automatiza la copia y el respaldo de datos. Traslada los archivos a una nueva carpeta y les añade la fecha y hora en el nombre (ingesta incremental) para mantener un historial ordenado sin borrar datos anteriores. Además, muestra un reporte de éxito y filas procesadas en la consola.
+## ¿Qué hace este script?
 
-## Estructura del Proyecto
+El script `ingesta.py` lee el archivo `origen/ventas.csv` y procesa
+**solo los registros nuevos** que no hayan sido ingestados anteriormente,
+usando un archivo de control (`checkpoint.json`) para recordar hasta
+dónde llegó en la ejecución anterior.
 
-Actividad_Ingesta/
- ├── origen/
- |   |
- │   └── ventas.csv          # Archivo fuente original
- ├── data/
- |   |
- │   └── raw/                # Carpeta de destino (historizada)
- |
- ├── ingesta.py              # Script de automatización
- |
- └── README.md               # Documentación
+### Características
+- ✅ Ingesta incremental (no reprocesa registros ya cargados)
+- ✅ Logging con timestamp en cada paso
+- ✅ Validación de existencia del archivo fuente
+- ✅ Conteo de registros procesados
+- ✅ Historial acumulativo en `data/raw/ventas_incremental.csv`
 
+## Archivo fuente
 
-## Archivos Utilizados
-Entrada: origen/ventas.csv
+| Campo        | Descripción                  |
+|--------------|------------------------------|
+| id_venta     | Identificador único de venta |
+| fecha        | Fecha de la transacción      |
+| producto     | Nombre del producto          |
+| cantidad     | Unidades vendidas            |
+| precio_total | Monto total de la venta      |
 
-Salida: data/raw/ventas_[timestamp].csv
+Ubicación: `origen/ventas.csv`
 
-## Instrucciones de Ejecución
-Preparación: Colocar el archivo ventas.csv en la carpeta origen/.
+## Cómo ejecutarlo
 
-Ejecución: Ejecutar el script desde la terminal:
+### Requisitos
+- Python 3.8 o superior
+- No requiere librerías externas (solo módulos estándar)
 
-Bash
+### Ejecución
+
+```bash
 python ingesta.py
-
-### Verificación:
- - Revisar los logs en consola y la carpeta data/raw/ para confirmar la ingesta.
-
-### Funciones Automatizadas
-- Copia de archivos:
-  -  Uso de shutil para traslado programático.
-
-### Historización:
-- Generación de nombres únicos con datetime (Nivel Avanzado).
-
-### Trazabilidad: 
-- Registro de inicio, éxito/error y conteo de filas mediante logging.
-
+```
