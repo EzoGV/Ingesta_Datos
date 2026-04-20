@@ -9,13 +9,15 @@ El script `ingesta.py` automatiza la copia y el respaldo de datos. Traslada los 
 
 Actividad_Ingesta/
  ├── origen/
+ |   |
  │   └── ventas.csv          # Archivo fuente original
  ├── data/
+ |   |
  │   └── raw/                # Carpeta de destino (historizada)
+ |
  ├── ingesta.py              # Script de automatización
+ |
  └── README.md               # Documentación
-
- README - actividad 2_1_1
 
 
 ## Archivos Utilizados
