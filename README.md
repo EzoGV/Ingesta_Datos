@@ -11,11 +11,11 @@ usando un archivo de control (`checkpoint.json`) para recordar hasta
 dónde llegó en la ejecución anterior.
 
 ### Características
-- ✅ Ingesta incremental (no reprocesa registros ya cargados)
-- ✅ Logging con timestamp en cada paso
-- ✅ Validación de existencia del archivo fuente
-- ✅ Conteo de registros procesados
-- ✅ Historial acumulativo en `data/raw/ventas_incremental.csv`
+-  Ingesta incremental (no reprocesa registros ya cargados)
+-  Logging con timestamp en cada paso
+-  Validación de existencia del archivo fuente
+-  Conteo de registros procesados
+-  Historial acumulativo en `data/raw/ventas_incremental.csv`
 
 ## Archivo fuente
 
