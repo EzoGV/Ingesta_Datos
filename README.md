@@ -2,6 +2,8 @@
 
 Script automatizado en Python para la ingesta de datos. El proceso mueve archivos desde una zona de origen a una zona historizada (raw), aplicando marcas de tiempo para evitar la pérdida de datos.
 
+## ¿Qué hace el script?
+El script `ingesta.py` automatiza la copia y el respaldo de datos. Traslada los archivos a una nueva carpeta y les añade la fecha y hora en el nombre (ingesta incremental) para mantener un historial ordenado sin borrar datos anteriores. Además, muestra un reporte de éxito y filas procesadas en la consola.
 
 ## Estructura del Proyecto
 
