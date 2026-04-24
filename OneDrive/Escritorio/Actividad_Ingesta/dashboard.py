@@ -38,6 +38,6 @@ plt.grid(axis='y', linestyle='--', alpha=0.7)
 for i, v in enumerate(ingresos):
     plt.text(i, v + 500, f'${v}', ha='center', fontweight='bold')
 
-# 6. ¡Mostramos la magia!
+# 6. Mostramos Dashboard
 plt.tight_layout()
 plt.show()
