@@ -2,7 +2,7 @@
 
 Este proyecto implementa un flujo de datos automatizado (ETL) para la gestión de ventas de una tienda de ropa urbana. El sistema cumple con el ciclo completo de procesamiento: desde la extracción de fuentes crudas hasta la visualización en un dashboard.
 
-## 🚀 Flujo del Sistema
+##  Flujo del Sistema
 Siguiendo el esquema de arquitectura solicitado, el pipeline opera de la siguiente manera:
 
 1. **Fuente (Source):** Lectura de datos desde `origen/ventas.csv`.
@@ -10,19 +10,19 @@ Siguiendo el esquema de arquitectura solicitado, el pipeline opera de la siguien
 3. **Almacenamiento (Base de Datos):** Carga de datos optimizados en una base de datos **SQLite** (`data/ventas.db`) en la tabla `ventas_procesadas`.
 4. **Dashboard:** Generación de métricas visuales mediante el script `dashboard.py`.
 
-## 📁 Estructura del Proyecto
+##  Estructura del Proyecto
 * `origen/ventas.csv`: Archivo con los datos de ventas originales.
 * `data/ventas.db`: Base de datos relacional donde se almacena la información limpia.
 * `ingesta.py`: Script encargado de la extracción, limpieza y carga (ETL).
 * `dashboard.py`: Script encargado de la visualización de datos.
 
-## 🛠️ Requisitos
+##  Requisitos
 Es necesario tener instalado Python 3.x y la librería de visualización:
 ```bash
 pip install matplotlib
 
 
-⚙️ Instrucciones de Ejecución
+ Instrucciones de Ejecución
 Para poner en marcha el pipeline de datos, asegúrate de estar parado en la carpeta raíz del proyecto (Actividad_Ingesta) y sigue este orden:
 
 1. Preparación de la Fuente
