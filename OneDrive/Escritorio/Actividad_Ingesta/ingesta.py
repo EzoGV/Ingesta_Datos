@@ -1,76 +1,78 @@
-import shutil
+import sqlite3
+import csv
 import logging
 import os
-import csv
-import json
 from datetime import datetime
 
+# Configuración de trazabilidad
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# ── RUTAS ──────────────────────────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # carpeta de ingesta.py
-ORIGEN = os.path.join(BASE_DIR, "origen", "ventas.csv")
-DESTINO_DIR = os.path.join(BASE_DIR, "data", "raw")
-CHECKPOINT_FILE = os.path.join(BASE_DIR, "data", "checkpoint.json")
+origen = "origen/ventas.csv"
+carpeta_db = "data/"
+ruta_db = "data/ventas.db"
 
-def cargar_checkpoint():
-    if os.path.exists(CHECKPOINT_FILE):
-        with open(CHECKPOINT_FILE, 'r') as f:
-            data = json.load(f)
-            return data.get("ultimo_id", 0)
-    return 0
-
-def guardar_checkpoint(ultimo_id):
-    os.makedirs(os.path.dirname(CHECKPOINT_FILE), exist_ok=True)
-    with open(CHECKPOINT_FILE, 'w') as f:
-        json.dump({"ultimo_id": ultimo_id, "actualizado": datetime.now().isoformat()}, f, indent=2)
-
-def leer_registros_nuevos(origen, ultimo_id_procesado):
-    nuevos = []
-    with open(origen, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if int(row["id_venta"]) > ultimo_id_procesado:
-                nuevos.append(row)
-    return nuevos
-
-def guardar_registros(registros, destino_dir):
-    os.makedirs(destino_dir, exist_ok=True)
-    destino = os.path.join(destino_dir, "ventas_incremental.csv")
-    archivo_nuevo = not os.path.exists(destino)
-    with open(destino, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=registros[0].keys())
-        if archivo_nuevo:
-            writer.writeheader()
-        writer.writerows(registros)
-    return destino
-
-# ── PROCESO PRINCIPAL ──────────────────────────────────────────────────────────
 try:
-    logging.info("=" * 50)
-    logging.info("Inicio del proceso de ingesta INCREMENTAL.")
+    logging.info("Iniciando proceso ETL (Extracción, Limpieza y Carga)...")
+    
+    if os.path.exists(origen):
+        os.makedirs(carpeta_db, exist_ok=True)
+        
+        # --- PASO 1: EXTRACCIÓN Y LIMPIEZA EN MEMORIA ---
+        ventas_limpias = {} # Usamos un diccionario para evitar id_venta duplicados automáticamente
+        timestamp_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        with open(origen, 'r', encoding='utf-8') as archivo_csv:
+            lector = csv.reader(archivo_csv)
+            next(lector)  # Saltamos los encabezados
+            
+            for fila in lector:
+                id_venta = fila[0].strip()
+                fecha = fila[1].strip()
+                # LIMPIEZA: Quitamos espacios extra y pasamos todo a MAYÚSCULAS
+                producto = fila[2].strip().upper() 
+                # LIMPIEZA: Convertimos texto a número entero para poder hacer cálculos después
+                cantidad = int(fila[3].strip())
+                precio_total = int(fila[4].strip())
+                
+                # Al guardarlo así, si el CSV trae dos veces el ID '001', 
+                # Python automáticamente se queda solo con el último (elimina duplicados)
+                ventas_limpias[id_venta] = (id_venta, fecha, producto, cantidad, precio_total, timestamp_actual)
 
-    if not os.path.exists(ORIGEN):
-        logging.error(f"Archivo fuente no encontrado: {ORIGEN}")
-        exit(1)
+        logging.info(f"Limpieza exitosa. Registros únicos listos para inyectar: {len(ventas_limpias)}")
 
-    ultimo_id = cargar_checkpoint()
-    logging.info(f"Último ID procesado (checkpoint): {ultimo_id}")
-
-    nuevos = leer_registros_nuevos(ORIGEN, ultimo_id)
-
-    if not nuevos:
-        logging.info("Sin registros nuevos. No hay nada que ingestar.")
+        # --- PASO 2: CARGA A LA BASE DE DATOS SQLITE ---
+        conexion = sqlite3.connect(ruta_db)
+        cursor = conexion.cursor()
+        
+        # Creamos la tabla definitiva
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ventas_procesadas (
+                id_venta TEXT UNIQUE,
+                fecha TEXT,
+                producto TEXT,
+                cantidad INTEGER,
+                precio_total INTEGER,
+                fecha_ingesta TEXT
+            )
+        ''')
+        
+        # Insertamos los datos ya limpios. 
+        # Usamos REPLACE para que si el ID ya existe en la BD, lo actualice en lugar de dar error.
+        registros_insertados = 0
+        for datos_venta in ventas_limpias.values():
+            cursor.execute('''
+                INSERT OR REPLACE INTO ventas_procesadas (id_venta, fecha, producto, cantidad, precio_total, fecha_ingesta)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', datos_venta)
+            registros_insertados += 1
+            
+        conexion.commit()
+        conexion.close()
+        
+        logging.info(f"Carga exitosa. Registros guardados en SQLite: {registros_insertados}")
+        
     else:
-        logging.info(f"Registros nuevos encontrados: {len(nuevos)}")
-        archivo_destino = guardar_registros(nuevos, DESTINO_DIR)
-        logging.info(f"Registros escritos en: {archivo_destino}")
-        nuevo_ultimo_id = max(int(r["id_venta"]) for r in nuevos)
-        guardar_checkpoint(nuevo_ultimo_id)
-        logging.info(f"Checkpoint actualizado → último ID: {nuevo_ultimo_id}")
-
-    logging.info("Proceso finalizado correctamente.")
-    logging.info("=" * 50)
+        logging.error(f"Error: No se encontró el archivo en {origen}")
 
 except Exception as e:
-    logging.error(f"Error en la ingesta: {e}")
+    logging.error(f"Error crítico en el proceso ETL: {e}")

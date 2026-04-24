@@ -2,4 +2,10 @@ id_venta,fecha,producto,cantidad,precio_total
 001,2024-04-15,Tank Top STK,2,30000
 002,2024-04-15,Termika Jacket,1,45000
 003,2024-04-16,Jeans Multi Cargo Negro,1,35000
-004,2024-04-16,Human FC Tee,3,6000
+004,2024-04-16,Human FC Tee,3,60000
+005,2024-04-17,Polera Boxy Fit Blonde,2,30000
+006,2024-04-18,Sandy Baggos Jeans,1,42000
+007,2024-04-18,Llavero Peluche Hangyodon,3,15000
+008,2024-04-19,Polerón Oversize One Piece,1,35000
+009,2024-04-20,Gorro Beanie Bandai,2,18000
+010,2024-04-20,Calcetines Skate Blancos,4,12000
