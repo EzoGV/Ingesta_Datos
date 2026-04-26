@@ -1,0 +1,21 @@
+2026-04-26 12:45:28,206 - INFO - --- INICIANDO FASE DE INGESTA ---
+2026-04-26 12:45:28,212 - INFO - ÉXITO: Se ingestaron 10 productos a la tabla ventas_raw.
+2026-04-26 12:45:59,791 - INFO - --- INICIANDO FASE DE INGESTA ---
+2026-04-26 12:45:59,796 - INFO - EXITO: Se ingestaron 10 productos a la tabla ventas_raw.
+2026-04-26 12:47:30,186 - INFO - --- INICIANDO FASE DE INGESTA ---
+2026-04-26 12:47:30,198 - INFO - EXITO: Se ingestaron 50 productos a la tabla ventas_raw.
+2026-04-26 12:48:23,078 - INFO - --- INICIANDO FASE DE INGESTA ---
+2026-04-26 12:48:23,094 - INFO - EXITO: Se ingestaron 100 productos a la tabla ventas_raw.
+2026-04-26 12:49:43,383 - INFO - --- INICIANDO FASE DE LIMPIEZA ---
+2026-04-26 12:49:43,392 - INFO - ÉXITO: Limpieza completada. 100 registros únicos procesados.
+2026-04-26 12:57:50,763 - INFO - --- INICIANDO FASE DE LIMPIEZA Y TRANSFORMACIÓN ---
+2026-04-26 12:57:50,765 - ERROR - ERROR CRÍTICO en Limpieza: table ventas_procesadas has 6 columns but 7 values were supplied
+2026-04-26 12:59:34,796 - INFO - --- INICIANDO FASE DE LIMPIEZA Y TRANSFORMACIÓN ---
+2026-04-26 12:59:34,809 - INFO - ÉXITO: Registros procesados en la Base de Datos.
+2026-04-26 12:59:34,809 - INFO - ÉXITO: Dataset limpio guardado correctamente en data/processed/dataset_limpio.csv
+2026-04-26 13:05:27,879 - INFO - --- INICIANDO PROCESAMIENTO DENTRO DE SQLITE (RAW -> PROCESSED) ---
+2026-04-26 13:05:27,894 - INFO - ÉXITO: Las dos tablas (ventas_raw y ventas_procesadas) ahora coexisten en ventas.db
+2026-04-26 13:05:27,894 - INFO - ÉXITO: Archivo CSV de respaldo generado en data/processed/dataset_limpio.csv
+2026-04-26 13:09:56,826 - INFO -  INICIANDO PROCESAMIENTO Y LIMPIEZA DE DATOS 
+2026-04-26 13:09:56,838 - INFO - ÉXITO: Datos procesados y tabla ventas_procesadas creada con éxito.
+2026-04-26 13:09:56,839 - INFO - ÉXITO: Archivo CSV de respaldo generado en data/procesado/dataset_limpio.csv
