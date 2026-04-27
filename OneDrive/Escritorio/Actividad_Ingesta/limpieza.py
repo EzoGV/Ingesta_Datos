@@ -3,7 +3,7 @@ import logging
 import os
 import csv
 
-# Configuración de logs en archivo y consola
+#Configuración de logs en archivo y consola
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -16,16 +16,16 @@ carpeta_procesados = "data/procesado/"
 try:
     logging.info(" INICIANDO PROCESAMIENTO Y LIMPIEZA DE DATOS ")
     
-    # Asegurar carpeta para exportación final
+    #Asegurar carpeta para exportación final
     os.makedirs(carpeta_procesados, exist_ok=True)
     
     conexion = sqlite3.connect(ruta_db)
     cursor = conexion.cursor()
 
-    # 1. Limpieza de estructura: Resetear la tabla procesada si ya existía
+    #Limpieza de estructura: Resetear la tabla procesada si ya existía
     cursor.execute('DROP TABLE IF EXISTS ventas_procesadas')
 
-    # 2. RÚBRICA: Crear la tabla con la nueva columna 'precio_unitario'
+    #Crear la tabla con la nueva columna 'precio_unitario'
     cursor.execute('''
         CREATE TABLE ventas_procesadas (
             id_venta TEXT UNIQUE, 
@@ -38,11 +38,11 @@ try:
         )
     ''')
 
-    # 3. RÚBRICA: Procesamiento y Transformación Directa (SQL)
-    # - Estandariza: UPPER y TRIM
-    # - Filtra: Nulos y cantidades menores o iguales a 0
-    # - Transforma: Genera precio_unitario (precio_total / cantidad)
-    # - Deduplica: GROUP BY id_venta
+    # Procesamiento y Transformación Directa (SQL)
+    # Estandariza: UPPER y TRIM
+    # Filtra: Nulos y cantidades menores o iguales a 0
+    # Transforma: Genera precio_unitario (precio_total / cantidad)
+    # Deduplica: GROUP BY id_venta
     cursor.execute('''
         INSERT INTO ventas_procesadas
         SELECT 
@@ -61,7 +61,7 @@ try:
 
     conexion.commit()
     
-    # 4. RÚBRICA: Guardar copia del dataset limpio en la carpeta /processed/
+    # Guardar copia del dataset limpio en la carpeta /processed/
     ruta_csv_procesado = os.path.join(carpeta_procesados, "dataset_limpio.csv")
     cursor.execute('SELECT * FROM ventas_procesadas')
     filas = cursor.fetchall()

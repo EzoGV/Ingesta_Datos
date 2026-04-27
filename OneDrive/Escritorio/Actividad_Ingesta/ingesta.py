@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime
 
-# CONFIGURACIÓN DE LOGS: Ahora se guardan en un archivo 'pipeline.log'
+#CONFIGURACIÓN DE LOGS: Ahora se guardan en un archivo 'pipeline.log'
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -24,7 +24,7 @@ try:
         conexion = sqlite3.connect(ruta_db)
         cursor = conexion.cursor()
         
-        # Tabla Raw (Cruda)
+        #Tabla Raw (Cruda)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS ventas_raw (
                 id_venta TEXT, fecha TEXT, producto TEXT, cantidad TEXT, precio_total TEXT, fecha_ingesta TEXT
