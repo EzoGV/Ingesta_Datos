@@ -1,52 +1,55 @@
-import sqlite3
 import csv
 import logging
 import os
 from datetime import datetime
 
-#CONFIGURACIÓN DE LOGS: Ahora se guardan en un archivo 'pipeline.log'
+# CONFIGURACIÓN DE LOGS
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("pipeline.log"), # Guarda en archivo
-        logging.StreamHandler()              # También muestra en consola
+        logging.FileHandler("pipeline.log"),
+        logging.StreamHandler()
     ]
 )
 
 origen = "origen/ventas.csv"
-ruta_db = "data/ventas.db"
+destino_raw = "data/raw/ventas_raw.csv"
 
-try:
-    logging.info("--- INICIANDO FASE DE INGESTA ---")
-    
-    if os.path.exists(origen):
-        conexion = sqlite3.connect(ruta_db)
-        cursor = conexion.cursor()
+def generar_respaldo_raw():
+    try:
+        logging.info("---INGESTA:CAPA RAW---")
         
-        #Tabla Raw (Cruda)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS ventas_raw (
-                id_venta TEXT, fecha TEXT, producto TEXT, cantidad TEXT, precio_total TEXT, fecha_ingesta TEXT
-            )
-        ''')
+        #Aseguramos que la carpeta data/raw exista
+        os.makedirs("data/raw", exist_ok=True)
         
-        registros_ingestados = 0
-        timestamp_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        with open(origen, 'r', encoding='utf-8') as f:
-            lector = csv.reader(f)
-            next(lector)
+        if not os.path.exists(origen):
+            logging.error(f"No se encontró el archivo original en {origen}")
+            return
+
+        #Leemos del origen y escribimos en la carpeta raw
+        #Agregamos la columna fecha_ingesta para tener trazabilidad del archivo
+        with open(origen, 'r', encoding='utf-8') as f_in, \
+             open(destino_raw, 'w', newline='', encoding='utf-8') as f_out:
+            
+            lector = csv.reader(f_in)
+            escritor = csv.writer(f_out)
+            
+            cabecera = next(lector)
+            escritor.writerow(cabecera + ["fecha_ingesta"])
+            
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            registros = 0
+            
             for fila in lector:
-                fila.append(timestamp_actual)
-                cursor.execute('INSERT INTO ventas_raw VALUES (?,?,?,?,?,?)', fila)
-                registros_ingestados += 1
-        
-        conexion.commit()
-        conexion.close()
-        logging.info(f"EXITO: Se ingestaron {registros_ingestados} productos a la tabla ventas_raw.")
-    else:
-        logging.error(f"ERROR: No se encontró el archivo en {origen}")
+                escritor.writerow(fila + [timestamp])
+                registros += 1
+                
+        logging.info(f"ÉXITO: Se creó el archivo {destino_raw} con {registros} registros.")
+  
 
-except Exception as e:
-    logging.error(f"ERROR CRÍTICO en Ingesta: {e}")
+    except Exception as e:
+        logging.error(f"ERROR en la fase de ingesta: {e}")
+
+if __name__ == "__main__":
+    generar_respaldo_raw()

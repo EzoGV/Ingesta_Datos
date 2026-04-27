@@ -1,80 +1,95 @@
-import sqlite3
+import csv
 import logging
 import os
-import csv
+from datetime import datetime
+from config_db import obtener_conexion
 
-#Configuración de logs en archivo y consola
+#Configuración de logs
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler("pipeline.log"), logging.StreamHandler()]
 )
 
-ruta_db = "data/ventas.db"
-carpeta_procesados = "data/procesado/"
+ruta_raw = "data/raw/ventas_raw.csv"
+carpeta_procesados = "data/procesado"
+ruta_processed = f"{carpeta_procesados}/dataset_limpio.csv"
 
-try:
-    logging.info(" INICIANDO PROCESAMIENTO Y LIMPIEZA DE DATOS ")
-    
-    #Asegurar carpeta para exportación final
-    os.makedirs(carpeta_procesados, exist_ok=True)
-    
-    conexion = sqlite3.connect(ruta_db)
-    cursor = conexion.cursor()
+def limpiar_y_cargar():
+    try:
+        logging.info("--- ETAPA 2: PROCESAMIENTO PYTHON -> CSV -> POSTGRES ---")
+        
+        #Aseguramos que la carpeta exista
+        os.makedirs(carpeta_procesados, exist_ok=True)
+        
+        datos_limpios = []
+        ids_vistos = set() # Para eliminar duplicados
 
-    #Limpieza de estructura: Resetear la tabla procesada si ya existía
-    cursor.execute('DROP TABLE IF EXISTS ventas_procesadas')
+        #PROCESAMIENTO EN PYTHON (Limpiamos los datos en memoria)
+        with open(ruta_raw, 'r', encoding='utf-8') as f:
+            lector = csv.DictReader(f)
+            for fila in lector:
+                id_v = fila['id_venta'].strip()
+                
+                #Sin duplicados, sin vacíos, cantidad mayor a 0
+                if id_v and id_v not in ids_vistos and int(fila['cantidad']) > 0:
+                    producto = fila['producto'].strip().upper()
+                    p_total = int(fila['precio_total'])
+                    cant = int(fila['cantidad'])
+                    p_unitario = p_total // cant # Creamos la nueva columna
+                    
+                    datos_limpios.append({
+                        'id_venta': id_v,
+                        'fecha': fila['fecha'],
+                        'producto': producto,
+                        'cantidad': cant,
+                        'precio_total': p_total,
+                        'precio_unitario': p_unitario,
+                        'fecha_ingesta': fila['fecha_ingesta']
+                    })
+                    ids_vistos.add(id_v)
 
-    #Crear la tabla con la nueva columna 'precio_unitario'
-    cursor.execute('''
-        CREATE TABLE ventas_procesadas (
-            id_venta TEXT UNIQUE, 
-            fecha TEXT, 
-            producto TEXT, 
-            cantidad INTEGER, 
-            precio_total INTEGER, 
-            precio_unitario INTEGER, 
-            fecha_ingesta TEXT
-        )
-    ''')
+        #Generar csv de datos procesados
+        with open(ruta_processed, 'w', newline='', encoding='utf-8') as f:
+            campos = ['id_venta', 'fecha', 'producto', 'cantidad', 'precio_total', 'precio_unitario', 'fecha_ingesta']
+            escritor = csv.DictWriter(f, fieldnames=campos)
+            escritor.writeheader()
+            escritor.writerows(datos_limpios)
+        
+        logging.info(f"ÉXITO: Archivo CSV limpio generado en {ruta_processed}")
 
-    # Procesamiento y Transformación Directa (SQL)
-    # Estandariza: UPPER y TRIM
-    # Filtra: Nulos y cantidades menores o iguales a 0
-    # Transforma: Genera precio_unitario (precio_total / cantidad)
-    # Deduplica: GROUP BY id_venta
-    cursor.execute('''
-        INSERT INTO ventas_procesadas
-        SELECT 
-            id_venta, 
-            fecha, 
-            UPPER(TRIM(producto)), 
-            CAST(cantidad AS INTEGER), 
-            CAST(precio_total AS INTEGER), 
-            (CAST(precio_total AS INTEGER) / CAST(cantidad AS INTEGER)),
-            MAX(fecha_ingesta)
-        FROM ventas_raw
-        WHERE id_venta IS NOT NULL AND id_venta != '' 
-          AND CAST(cantidad AS INTEGER) > 0
-        GROUP BY id_venta
-    ''')
+        #CONECTAR Y CARGAR A LA BD POSTGRESQL
+        conexion = obtener_conexion()
+        cursor = conexion.cursor()
+        
+        #Reseteamos la tabla para que no se dupliquen datos si corres el script varias veces
+        cursor.execute("DROP TABLE IF EXISTS ventas_procesadas")
+        cursor.execute('''
+            CREATE TABLE ventas_procesadas (
+                id_venta TEXT PRIMARY KEY,
+                fecha DATE,
+                producto TEXT,
+                cantidad INTEGER,
+                precio_total INTEGER,
+                precio_unitario INTEGER,
+                fecha_ingesta TIMESTAMP
+            )
+        ''')
 
-    conexion.commit()
-    
-    # Guardar copia del dataset limpio en la carpeta /processed/
-    ruta_csv_procesado = os.path.join(carpeta_procesados, "dataset_limpio.csv")
-    cursor.execute('SELECT * FROM ventas_procesadas')
-    filas = cursor.fetchall()
-    
-    with open(ruta_csv_procesado, 'w', newline='', encoding='utf-8') as f:
-        escritor = csv.writer(f)
-        escritor.writerow([d[0] for d in cursor.description])
-        escritor.writerows(filas)
+        # Insertamos los datos ya limpios en el motor
+        for d in datos_limpios:
+            cursor.execute('''
+                INSERT INTO ventas_procesadas VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', (d['id_venta'], d['fecha'], d['producto'], d['cantidad'], d['precio_total'], d['precio_unitario'], d['fecha_ingesta']))
+        
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        
+        logging.info("ÉXITO: Base de Datos PostgreSQL actualizada con datos procesados.")
 
-    conexion.close()
-    
-    logging.info("ÉXITO: Datos procesados y tabla ventas_procesadas creada con éxito.")
-    logging.info(f"ÉXITO: Archivo CSV de respaldo generado en {ruta_csv_procesado}")
+    except Exception as e:
+        logging.error(f"Error en limpieza: {e}")
 
-except Exception as e:
-    logging.error(f"ERROR en el procesamiento de tablas: {e}")
+if __name__ == "__main__":
+    limpiar_y_cargar()

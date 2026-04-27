@@ -19,3 +19,13 @@
 2026-04-26 13:09:56,826 - INFO -  INICIANDO PROCESAMIENTO Y LIMPIEZA DE DATOS 
 2026-04-26 13:09:56,838 - INFO - ÉXITO: Datos procesados y tabla ventas_procesadas creada con éxito.
 2026-04-26 13:09:56,839 - INFO - ÉXITO: Archivo CSV de respaldo generado en data/procesado/dataset_limpio.csv
+2026-04-27 13:48:03,014 - INFO - --- INICIANDO FASE DE INGESTA (POSTGRESQL) ---
+2026-04-27 13:48:03,098 - INFO - ÉXITO: Se ingestaron 100 productos a la tabla ventas_raw en PostgreSQL.
+2026-04-27 14:02:04,201 - INFO - --- ETAPA 2: PROCESAMIENTO PYTHON -> CSV -> POSTGRES ---
+2026-04-27 14:02:04,202 - INFO - ÉXITO: Archivo CSV limpio generado en data/procesado/dataset_limpio.csv
+2026-04-27 14:02:04,306 - INFO - ÉXITO: Base de Datos PostgreSQL actualizada con datos procesados.
+2026-04-27 14:20:37,177 - INFO - --- INGESTA: GENERANDO RESPALDO FÍSICO EN CAPA RAW ---
+2026-04-27 14:20:37,179 - INFO - ÉXITO: Se creó el archivo data/raw/ventas_raw.csv con 100 registros.
+2026-04-27 14:20:37,179 - INFO - NOTA: No se crearon tablas en PostgreSQL en esta fase.
+2026-04-27 14:20:50,646 - INFO - --- INGESTA: GENERANDO RESPALDO FÍSICO EN CAPA RAW ---
+2026-04-27 14:20:50,648 - INFO - ÉXITO: Se creó el archivo data/raw/ventas_raw.csv con 100 registros.
