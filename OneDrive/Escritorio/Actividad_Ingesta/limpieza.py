@@ -2,9 +2,8 @@ import csv
 import logging
 import os
 from datetime import datetime
-from config_db import obtener_conexion
 
-#Configuración de logs
+# Configuración de logs
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -15,81 +14,73 @@ ruta_raw = "data/raw/ventas_raw.csv"
 carpeta_procesados = "data/procesado"
 ruta_processed = f"{carpeta_procesados}/dataset_limpio.csv"
 
-def limpiar_y_cargar():
+def limpiar_rut(rut_sucio):
+    """Limpia el RUT quitando puntos, guiones y espacios."""
+    if not rut_sucio:
+        return ""
+    return str(rut_sucio).replace(".", "").replace("-", "").strip().upper()
+
+def limpiar_datos():
     try:
-        logging.info("--- ETAPA 2: PROCESAMIENTO PYTHON -> CSV -> POSTGRES ---")
+        logging.info("--- ETAPA 2: LIMPIEZA Y NORMALIZACIÓN (PYTHON) ---")
         
-        #Aseguramos que la carpeta exista
+        # Aseguramos que la carpeta exista
         os.makedirs(carpeta_procesados, exist_ok=True)
         
         datos_limpios = []
-        ids_vistos = set() # Para eliminar duplicados
+        ids_vistos = set() 
 
-        #PROCESAMIENTO EN PYTHON (Limpiamos los datos en memoria)
+        if not os.path.exists(ruta_raw):
+            logging.error(f"No se encontró el archivo raw en {ruta_raw}")
+            return
+
         with open(ruta_raw, 'r', encoding='utf-8') as f:
             lector = csv.DictReader(f)
             for fila in lector:
                 id_v = fila['id_venta'].strip()
                 
-                #Sin duplicados, sin vacíos, cantidad mayor a 0
+                #REGLAS DE LIMPIEZA:
+                #Evitar duplicados por ID
+                #Asegurar que cantidad sea mayor a 0
+                #Normalizar producto (Mayúsculas)
+                #Normalizar RUT (Sin puntos ni guiones)
                 if id_v and id_v not in ids_vistos and int(fila['cantidad']) > 0:
+                    
                     producto = fila['producto'].strip().upper()
+                    rut_normalizado = limpiar_rut(fila.get('rut', ''))
+                    
                     p_total = int(fila['precio_total'])
                     cant = int(fila['cantidad'])
-                    p_unitario = p_total // cant # Creamos la nueva columna
+                    # Calculamos precio unitario redondeado
+                    p_unitario = p_total // cant 
                     
                     datos_limpios.append({
                         'id_venta': id_v,
-                        'fecha': fila['fecha'],
+                        'fecha_venta': fila['fecha_venta'], # Columna nueva
                         'producto': producto,
                         'cantidad': cant,
                         'precio_total': p_total,
                         'precio_unitario': p_unitario,
+                        'rut': rut_normalizado, # RUT limpio
                         'fecha_ingesta': fila['fecha_ingesta']
                     })
                     ids_vistos.add(id_v)
 
-        #Generar csv de datos procesados
-        with open(ruta_processed, 'w', newline='', encoding='utf-8') as f:
-            campos = ['id_venta', 'fecha', 'producto', 'cantidad', 'precio_total', 'precio_unitario', 'fecha_ingesta']
-            escritor = csv.DictWriter(f, fieldnames=campos)
-            escritor.writeheader()
-            escritor.writerows(datos_limpios)
-        
-        logging.info(f"ÉXITO: Archivo CSV limpio generado en {ruta_processed}")
-
-        #CONECTAR Y CARGAR A LA BD POSTGRESQL
-        conexion = obtener_conexion()
-        cursor = conexion.cursor()
-        
-        #Reseteamos la tabla para que no se dupliquen datos si corres el script varias veces
-        cursor.execute("DROP TABLE IF EXISTS ventas_procesadas")
-        cursor.execute('''
-            CREATE TABLE ventas_procesadas (
-                id_venta TEXT PRIMARY KEY,
-                fecha DATE,
-                producto TEXT,
-                cantidad INTEGER,
-                precio_total INTEGER,
-                precio_unitario INTEGER,
-                fecha_ingesta TIMESTAMP
-            )
-        ''')
-
-        # Insertamos los datos ya limpios en el motor
-        for d in datos_limpios:
-            cursor.execute('''
-                INSERT INTO ventas_procesadas VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ''', (d['id_venta'], d['fecha'], d['producto'], d['cantidad'], d['precio_total'], d['precio_unitario'], d['fecha_ingesta']))
-        
-        conexion.commit()
-        cursor.close()
-        conexion.close()
-        
-        logging.info("ÉXITO: Base de Datos PostgreSQL actualizada con datos procesados.")
+        # GENERAR CSV DE DATOS PROCESADOS (CAPA SILVER)
+        if datos_limpios:
+            with open(ruta_processed, 'w', newline='', encoding='utf-8') as f:
+                campos = ['id_venta', 'fecha_venta', 'producto', 'cantidad', 'precio_total', 'precio_unitario', 'rut', 'fecha_ingesta']
+                escritor = csv.DictWriter(f, fieldnames=campos)
+                escritor.writeheader()
+                escritor.writerows(datos_limpios)
+            
+            logging.info(f"ÉXITO: Se procesaron {len(datos_limpios)} registros.")
+            logging.info(f"Archivo Dataset creado")
+        else:
+            logging.warning("No se generaron datos limpios para exportar.")
 
     except Exception as e:
-        logging.error(f"Error en limpieza: {e}")
+        logging.error(f"Error en fase de limpieza: {e}")
 
 if __name__ == "__main__":
-    limpiar_y_cargar()
+    limpiar_datos()

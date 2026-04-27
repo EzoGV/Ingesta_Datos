@@ -29,3 +29,34 @@
 2026-04-27 14:20:37,179 - INFO - NOTA: No se crearon tablas en PostgreSQL en esta fase.
 2026-04-27 14:20:50,646 - INFO - --- INGESTA: GENERANDO RESPALDO FÍSICO EN CAPA RAW ---
 2026-04-27 14:20:50,648 - INFO - ÉXITO: Se creó el archivo data/raw/ventas_raw.csv con 100 registros.
+2026-04-27 14:43:11,768 - INFO - --- ETAPA 1: INGESTA - GENERANDO RESPALDO EN CAPA RAW ---
+2026-04-27 14:43:11,769 - INFO - ÉXITO: Se procesaron 331 registros correctamente.
+2026-04-27 14:43:11,770 - INFO - ARCHIVO GENERADO: data/raw/ventas_raw.csv
+2026-04-27 14:43:11,770 - INFO - AVISO: Capa RAW completada. Los datos ahora esperan limpieza y validación.
+2026-04-27 14:44:36,079 - INFO - --- ETAPA 1: INGESTA - GENERANDO RESPALDO EN CAPA RAW ---
+2026-04-27 14:44:36,081 - INFO - ÉXITO: Se procesaron 330 registros correctamente.
+2026-04-27 14:44:36,081 - INFO - ARCHIVO GENERADO: data/raw/ventas_raw.csv
+2026-04-27 14:44:36,081 - INFO - AVISO: Capa RAW completada. Los datos ahora esperan limpieza y validación.
+2026-04-27 14:45:07,646 - INFO - --- ETAPA 1: INGESTA - GENERANDO RESPALDO EN CAPA RAW ---
+2026-04-27 14:45:07,647 - INFO - ÉXITO: Se procesaron 330 registros correctamente.
+2026-04-27 14:45:07,647 - INFO - Archivo Raw generado
+2026-04-27 14:47:22,126 - INFO - --- ETAPA 2: LIMPIEZA Y NORMALIZACIÓN (PYTHON) ---
+2026-04-27 14:47:22,128 - INFO - ÉXITO: Se procesaron 330 registros.
+2026-04-27 14:47:22,128 - INFO - Archivo Dataset creado
+2026-04-27 14:47:22,128 - INFO - NOTA: La carga a base de datos se realizará en la Etapa 4.
+2026-04-27 14:55:11,942 - INFO - --- ETAPA 3: INICIANDO VALIDACIÓN ESTRUCTURAL Y SEMÁNTICA ---
+2026-04-27 14:55:11,950 - INFO - ÉXITO: 330 registros pasaron la validación.
+2026-04-27 14:58:15,047 - INFO - --- ETAPA 3: VALIDACIÓN Y SEPARACIÓN DE REGISTROS ---
+2026-04-27 14:58:15,053 - INFO - PROCESO COMPLETADO: 330 válidos y 0 errores detectados.
+2026-04-27 14:59:47,596 - INFO - ---INGESTA CAPA RAW ---
+2026-04-27 14:59:47,598 - INFO - ÉXITO: Se procesaron 380 registros correctamente.
+2026-04-27 14:59:47,598 - INFO - Archivo Raw generado
+2026-04-27 14:59:53,782 - INFO - --- ETAPA 2: LIMPIEZA Y NORMALIZACIÓN (PYTHON) ---
+2026-04-27 14:59:53,785 - INFO - ÉXITO: Se procesaron 369 registros.
+2026-04-27 14:59:53,785 - INFO - Archivo Dataset creado
+2026-04-27 14:59:59,550 - INFO - --- ETAPA 3: VALIDACIÓN Y SEPARACIÓN DE REGISTROS ---
+2026-04-27 14:59:59,557 - INFO - PROCESO COMPLETADO: 337 válidos y 32 errores detectados.
+2026-04-27 15:01:47,536 - INFO - --- ETAPA 3: VALIDACION Y SEPARACION DE REGISTROS ---
+2026-04-27 15:01:47,545 - INFO - PROCESO COMPLETADO: 337 válidos y 32 errores detectados.
+2026-04-27 15:06:35,945 - INFO - --- ETAPA 4: CARGA DE DATOS A POSTGRESQL ---
+2026-04-27 15:06:36,075 - INFO - EXITO TOTAL: 337 ventas cargadas y 32 errores auditados en la BD.
